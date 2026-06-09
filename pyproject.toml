@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tradegame"
+version = "0.1.0"
+requires-python = ">=3.9"
+dependencies = [
+    "ccxt>=4.3",
+    "pandas>=2.0",
+    "numpy>=1.24",
+    "duckdb>=0.9",
+    "pyyaml>=6.0",
+    "streamlit>=1.35",
+    "plotly>=5.20",
+]
+
+[project.optional-dependencies]
+phase2 = ["xgboost>=2.0", "scikit-learn>=1.3"]
+phase3 = ["deap>=1.4"]
+dev    = ["pytest>=7", "pytest-cov", "ruff"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

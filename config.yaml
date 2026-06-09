@@ -1,0 +1,17 @@
+default:
+  symbol: "BTC/USDT"
+  timeframe: "1h"
+  exchange: "binance"
+
+backtest:
+  start: "2023-01-01"
+  end: "2025-01-01"
+  initial_capital: 100000.0
+  fee_bps: 10        # 0.10% maker/taker (Binance standard)
+  slippage_bps: 5    # 0.05% price impact estimate
+
+walkforward:
+  train_bars: 2016   # 12 weeks at 1h
+  test_bars: 336     # 2 weeks at 1h
+
+data_dir: "data"

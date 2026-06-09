@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# data cache — large files, not tracked
+data/*.db
+data/*.parquet
+data/*.csv
+!data/.gitkeep
+
+# secrets / API keys
+.env
+*.key
+
+# IDE
+.idea/
+.vscode/
+*.swp
