@@ -18,6 +18,7 @@ def run(
     fee_bps: int = 10,
     slippage_bps: int = 5,
     window_size: int = 250,
+    timeframe: str = "1d",
 ) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
     """
     Simulate agent on historical OHLCV data.
@@ -29,7 +30,7 @@ def run(
     """
     from tradegame.features.indicators import compute_features
 
-    features = compute_features(ohlcv)
+    features = compute_features(ohlcv, timeframe=timeframe)
     portfolio = Portfolio(initial_capital, fee_bps, slippage_bps)
 
     for i in range(1, len(features)):

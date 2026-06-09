@@ -121,7 +121,7 @@ class LiveLoop:
         )
         self._df = pd.concat([self._df, new_row]).iloc[-self._WINDOW_CAP:]
 
-        features = compute_features(self._df)
+        features = compute_features(self._df, timeframe=self._timeframe)
         snapshot: dict[str, dict] = {}
 
         for agent, portfolio in zip(self._agents, self._portfolios):

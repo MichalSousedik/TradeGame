@@ -102,6 +102,7 @@ with tab_bt:
                 initial_capital=settings.backtest.initial_capital,
                 fee_bps=settings.backtest.fee_bps,
                 slippage_bps=settings.backtest.slippage_bps,
+                timeframe=timeframe,
             )
             results[agent.name] = {
                 "equity": hist["equity"] if not hist.empty else pd.Series(dtype=float),

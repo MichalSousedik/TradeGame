@@ -1,12 +1,54 @@
 """
 Technical indicators — implemented from scratch (no pandas-ta dependency).
 All indicators are causal: value at row i uses only rows 0..i.
-compute_features() is the single public entry point.
+
+compute_features(df, timeframe) is the single public entry point.
+Indicator periods scale with timeframe so the same agent logic works
+correctly on 1h, 4h, and 1d bars.
 """
 from __future__ import annotations
 
 import pandas as pd
 import numpy as np
+
+
+# ── indicator period presets per timeframe ────────────────────────────────────
+
+def _params(timeframe: str) -> dict:
+    """
+    Return indicator periods suited to the given bar timeframe.
+
+    Rule of thumb: periods represent *calendar days* worth of data.
+      EMA fast  ~  2 days
+      EMA slow  ~  8 days
+      EMA trend ~ 21 days
+      RSI       ~  1 day
+      MACD      ~  2 / 4.3 / 1.5 days
+      Bollinger ~ 20 days
+      ATR       ~ 14 days
+      ROC       ~ 10 days
+    """
+    if timeframe in ("1h", "2h"):
+        return dict(
+            ema_fast=48,  ema_slow=200,  ema_trend=500,
+            rsi=24,
+            macd_fast=48, macd_slow=104, macd_sig=36,
+            bb=480, atr=336, roc=240,
+        )
+    if timeframe in ("4h", "6h", "8h", "12h"):
+        return dict(
+            ema_fast=12,  ema_slow=50,   ema_trend=200,
+            rsi=14,
+            macd_fast=12, macd_slow=26,  macd_sig=9,
+            bb=120, atr=84,  roc=60,
+        )
+    # 1d, 3d, 1w, or unknown — original textbook values
+    return dict(
+        ema_fast=12,  ema_slow=26,   ema_trend=200,
+        rsi=14,
+        macd_fast=12, macd_slow=26,  macd_sig=9,
+        bb=20,  atr=14,  roc=10,
+    )
 
 
 # ── primitives ────────────────────────────────────────────────────────────────
@@ -63,22 +105,29 @@ def roc(series: pd.Series, length: int = 10) -> pd.Series:
 
 # ── public entry point ────────────────────────────────────────────────────────
 
-def compute_features(df: pd.DataFrame) -> pd.DataFrame:
+def compute_features(df: pd.DataFrame, timeframe: str = "1d") -> pd.DataFrame:
     """
-    Append all indicator columns to a copy of df.
+    Append indicator columns to a copy of df.
+
+    Periods are scaled to the timeframe so that EMA fast/slow represent
+    roughly the same calendar-time horizon regardless of bar size.
+
     Input : OHLCV DataFrame, UTC DatetimeIndex.
-    Output: same rows + columns [ema_fast, ema_slow, ema_200, rsi,
-                                  macd, macd_signal, macd_hist,
-                                  bb_upper, bb_mid, bb_lower, atr, roc].
+    Output: same rows + [ema_fast, ema_slow, ema_200, rsi,
+                          macd, macd_signal, macd_hist,
+                          bb_upper, bb_mid, bb_lower, atr, roc].
     """
+    p = _params(timeframe)
     out = df.copy()
     c = df["close"]
-    out["ema_fast"] = ema(c, 12)
-    out["ema_slow"] = ema(c, 26)
-    out["ema_200"] = ema(c, 200)
-    out["rsi"] = rsi(c, 14)
-    out["macd"], out["macd_signal"], out["macd_hist"] = macd(c)
-    out["bb_upper"], out["bb_mid"], out["bb_lower"] = bollinger(c)
-    out["atr"] = atr(df["high"], df["low"], c)
-    out["roc"] = roc(c, 10)
+    out["ema_fast"] = ema(c, p["ema_fast"])
+    out["ema_slow"] = ema(c, p["ema_slow"])
+    out["ema_200"]  = ema(c, p["ema_trend"])
+    out["rsi"]      = rsi(c, p["rsi"])
+    out["macd"], out["macd_signal"], out["macd_hist"] = macd(
+        c, p["macd_fast"], p["macd_slow"], p["macd_sig"]
+    )
+    out["bb_upper"], out["bb_mid"], out["bb_lower"] = bollinger(c, p["bb"])
+    out["atr"] = atr(df["high"], df["low"], c, p["atr"])
+    out["roc"] = roc(c, p["roc"])
     return out
