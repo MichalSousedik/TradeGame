@@ -17,6 +17,10 @@ data/*.csv
 .env
 *.key
 
+# macOS
+.DS_Store
+**/.DS_Store
+
 # IDE
 .idea/
 .vscode/
