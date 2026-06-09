@@ -7,10 +7,14 @@ build/
 venv/
 env/
 
-# data cache — large files, not tracked
+# data cache and live state — not tracked
 data/*.db
+data/*.wal
 data/*.parquet
 data/*.csv
+data/*.jsonl
+data/live_meta.json
+data/live_latest.json
 !data/.gitkeep
 
 # secrets / API keys
