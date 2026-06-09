@@ -69,12 +69,15 @@ def main() -> None:
     data_dir = Path(args.config).parent / settings.data_dir
     print(f"[runner] Fetching warmup history from {exchange_id}…")
 
-    cache = DataCache(data_dir)
     source = CryptoSource(exchange_id)
     end = datetime.now(tz=timezone.utc)
     start = end - timedelta(days=30)     # 30 days = 720 h-bars, enough for EMA-200
 
-    warmup_df = cache.get_or_fetch(source, symbol, timeframe, start, end)
+    # Use context manager so the file lock is released before the WebSocket loop
+    # starts — otherwise the dashboard can't open cache.db simultaneously.
+    with DataCache(data_dir) as cache:
+        warmup_df = cache.get_or_fetch(source, symbol, timeframe, start, end)
+
     if warmup_df is None or warmup_df.empty:
         print("[runner] ERROR: failed to fetch warmup data. Check internet connection.")
         sys.exit(1)

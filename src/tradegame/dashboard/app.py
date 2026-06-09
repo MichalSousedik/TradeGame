@@ -80,9 +80,10 @@ with tab_bt:
 
         with st.spinner("Fetching market data (cached after first run)…"):
             try:
-                cache = DataCache(_DATA_DIR)
-                source = CryptoSource(settings.exchange)
-                ohlcv = cache.get_or_fetch(source, symbol, timeframe, start_dt, end_dt)
+                with DataCache(_DATA_DIR) as cache:
+                    ohlcv = cache.get_or_fetch(
+                        CryptoSource(settings.exchange), symbol, timeframe, start_dt, end_dt
+                    )
             except Exception as exc:
                 st.error(f"Data fetch failed: {exc}")
                 st.stop()

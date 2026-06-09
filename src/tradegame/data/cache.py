@@ -22,7 +22,12 @@ CREATE TABLE IF NOT EXISTS ohlcv (
 
 
 class DataCache:
-    """DuckDB-backed local cache for OHLCV data with incremental fetching."""
+    """DuckDB-backed local cache for OHLCV data with incremental fetching.
+
+    Use as a context manager so the file lock is released promptly:
+        with DataCache(data_dir) as cache:
+            df = cache.get_or_fetch(...)
+    """
 
     def __init__(self, data_dir: Path) -> None:
         import duckdb
@@ -31,6 +36,15 @@ class DataCache:
         data_dir.mkdir(parents=True, exist_ok=True)
         self._conn = duckdb.connect(str(data_dir / "cache.db"))
         self._conn.execute(_CREATE_SQL)
+
+    def close(self) -> None:
+        self._conn.close()
+
+    def __enter__(self) -> "DataCache":
+        return self
+
+    def __exit__(self, *_) -> None:
+        self.close()
 
     def put(self, symbol: str, timeframe: str, df: pd.DataFrame) -> None:
         if df.empty:
