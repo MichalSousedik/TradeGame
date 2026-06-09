@@ -58,3 +58,24 @@ def test_round_trip_break_even_no_costs():
     p.rebalance(price=10.0, target_weight=1.0, ts=ts1)
     p.rebalance(price=10.0, target_weight=0.0, ts=ts2)   # sell at same price
     assert p.equity(10.0) == pytest.approx(100_000.0, rel=1e-6)
+
+
+def test_short_profits_when_price_falls():
+    p = Portfolio(100_000, fee_bps=0, slippage_bps=0)
+    p.rebalance(price=10.0, target_weight=-1.0, ts=TS)   # go fully short
+    # price drops 20 % → short should gain ~20 %
+    assert p.equity(8.0) == pytest.approx(120_000.0, rel=1e-4)
+
+
+def test_short_loses_when_price_rises():
+    p = Portfolio(100_000, fee_bps=0, slippage_bps=0)
+    p.rebalance(price=10.0, target_weight=-1.0, ts=TS)
+    # price rises 20 % → short should lose ~20 %
+    assert p.equity(12.0) == pytest.approx(80_000.0, rel=1e-4)
+
+
+def test_action_clamps_to_minus_one():
+    from tradegame.agents.base import Action
+    assert Action(-2.0).target_weight == pytest.approx(-1.0)
+    assert Action(-0.5).target_weight == pytest.approx(-0.5)
+    assert Action(2.0).target_weight  == pytest.approx(1.0)

@@ -9,14 +9,15 @@ import pandas as pd
 @dataclass
 class Action:
     """
-    Target portfolio weight in [0, 1].
-    0.0 = fully flat (all cash), 1.0 = fully invested long.
-    Phase 0 is long-only. Short extension (negative weights) in Phase 1+.
+    Target portfolio weight in [-1, 1].
+      +1.0  fully long  (all equity invested in the asset)
+       0.0  flat        (all cash, no exposure)
+      -1.0  fully short (equity-sized short position)
     """
     target_weight: float
 
     def __post_init__(self) -> None:
-        self.target_weight = max(0.0, min(1.0, self.target_weight))
+        self.target_weight = max(-1.0, min(1.0, self.target_weight))
 
 
 class Agent(ABC):
